@@ -44,13 +44,13 @@ cd Break_Reminder
 2. Copy the extension to your GNOME extensions directory:
 
 ```bash
-cp -r break-reminder@ahmet.com ~/.local/share/gnome-shell/extensions/
+cp -r break-reminder@AhmetNA ~/.local/share/gnome-shell/extensions/
 ```
 
 3. Compile the settings schema:
 
 ```bash
-cd ~/.local/share/gnome-shell/extensions/break-reminder@ahmet.com
+cd ~/.local/share/gnome-shell/extensions/break-reminder@AhmetNA
 glib-compile-schemas schemas/
 ```
 
@@ -62,7 +62,7 @@ glib-compile-schemas schemas/
 5. Enable the extension:
 
 ```bash
-gnome-extensions enable break-reminder@ahmet.com
+gnome-extensions enable break-reminder@AhmetNA
 ```
 
 ## Configuration
@@ -87,7 +87,7 @@ journalctl -f -o cat /usr/bin/gnome-shell
 ## File Structure
 
 ```
-break-reminder@ahmet.com/
+break-reminder@AhmetNA/
 ├── extension.js          # Main extension logic (timer)
 ├── break_screen.py       # Python GTK4 fullscreen UI
 ├── metadata.json         # Extension metadata
@@ -113,6 +113,6 @@ journalctl -f -o cat /usr/bin/gnome-shell
 ### Settings schema not found
 
 ```bash
-cd ~/.local/share/gnome-shell/extensions/break-reminder@ahmet.com
+cd ~/.local/share/gnome-shell/extensions/break-reminder@AhmetNA
 glib-compile-schemas schemas/
 ```
