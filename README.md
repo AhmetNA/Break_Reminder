@@ -2,6 +2,10 @@
 
 A GNOME Shell extension that reminds you to take breaks for your eyes and back every 20 minutes.
 
+## Screenshot
+
+![Break Reminder](Screenshot.png)
+
 ## Features
 
 - Automatic break reminders every 20 minutes (configurable)
@@ -31,27 +35,32 @@ sudo dnf install python3 python3-gobject gtk4
 ### Manual Installation
 
 1. Clone this repository:
+
 ```bash
 git clone https://github.com/AhmetNA/Break_Reminder.git
 cd Break_Reminder
 ```
 
 2. Copy the extension to your GNOME extensions directory:
+
 ```bash
 cp -r break-reminder@ahmet.com ~/.local/share/gnome-shell/extensions/
 ```
 
 3. Compile the settings schema:
+
 ```bash
 cd ~/.local/share/gnome-shell/extensions/break-reminder@ahmet.com
 glib-compile-schemas schemas/
 ```
 
 4. Restart GNOME Shell:
+
    - On X11: Press `Alt+F2`, type `r`, and press Enter
    - On Wayland: Log out and log back in
 
 5. Enable the extension:
+
 ```bash
 gnome-extensions enable break-reminder@ahmet.com
 ```
@@ -70,6 +79,7 @@ Once enabled, the extension runs automatically. Every 20 minutes a modal dialog 
 ## Development
 
 To view extension logs:
+
 ```bash
 journalctl -f -o cat /usr/bin/gnome-shell
 ```
@@ -94,12 +104,14 @@ Open source - feel free to use and modify.
 ## Troubleshooting
 
 ### Extension not showing up
+
 ```bash
 gnome-extensions list
 journalctl -f -o cat /usr/bin/gnome-shell
 ```
 
 ### Settings schema not found
+
 ```bash
 cd ~/.local/share/gnome-shell/extensions/break-reminder@ahmet.com
 glib-compile-schemas schemas/
