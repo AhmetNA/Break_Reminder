@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.break-reminder" path="/org/gnome/shell/extensions/break-reminder/">
+    <key name="break-duration" type="i">
+      <default>1200</default>
+      <summary>Break interval duration</summary>
+      <description>Time in seconds between break reminders (default: 1200 = 20 minutes)</description>
+    </key>
+    <key name="countdown-duration" type="i">
+      <default>20</default>
+      <summary>Countdown duration</summary>
+      <description>Time in seconds to display the break reminder (default: 20 seconds)</description>
+    </key>
+  </schema>
+</schemalist>

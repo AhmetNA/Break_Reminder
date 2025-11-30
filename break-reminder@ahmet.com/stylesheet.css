@@ -1,0 +1,41 @@
+.break-dialog {
+    background-color: #333333;
+    border-radius: 12px;
+    padding: 40px;
+    min-width: 500px;
+    min-height: 400px;
+}
+
+.break-dialog-content {
+    spacing: 30px;
+    padding: 20px;
+}
+
+.break-dialog-message {
+    color: white;
+    font-size: 32px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.break-dialog-countdown {
+    color: #888888;
+    font-size: 80px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.break-dialog .modal-dialog-button-box {
+    padding-top: 30px;
+}
+
+.break-dialog .modal-dialog-button {
+    color: #999999;
+    font-size: 16px;
+    padding: 10px 20px;
+}
+
+.break-dialog .modal-dialog-button:hover {
+    color: #cccccc;
+    background-color: rgba(255, 255, 255, 0.1);
+}
