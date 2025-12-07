@@ -1,8 +1,0 @@
-{
-  "uuid": "break-reminder@ahmetna.github.io",
-  "name": "Break Reminder",
-  "description": "Reminds you to take regular breaks for your eyes and back.\n\nConfigurable break interval and duration in settings.",
-  "shell-version": ["45", "46"],
-  "url": "https://github.com/AhmetNA/Break_Reminder",
-  "settings-schema": "org.gnome.shell.extensions.break-reminder"
-}
