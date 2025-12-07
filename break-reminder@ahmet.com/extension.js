@@ -6,12 +6,19 @@ export default class BreakReminderExtension extends Extension {
     constructor(metadata) {
         super(metadata);
         this._timeoutId = null;
-        this._breakDuration = 20 * 60; // 20 minutes (in seconds)
+        this._settings = null;
         this._scriptPath = null;
     }
 
     enable() {
         this._scriptPath = this.path + '/break_screen.py';
+        this._settings = this.getSettings();
+        
+        // Settings değişikliğini dinle
+        this._settings.connect('changed::break-duration', () => {
+            this._startTimer();
+        });
+        
         this._startTimer();
     }
 
@@ -27,7 +34,10 @@ export default class BreakReminderExtension extends Extension {
             GLib.Source.remove(this._timeoutId);
         }
 
-        this._timeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, this._breakDuration, () => {
+        // Settings dosyasından oku
+        const breakDuration = this._settings.get_int('break-duration');
+
+        this._timeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, breakDuration, () => {
             this._showBreakScreen();
             return GLib.SOURCE_REMOVE;
         });

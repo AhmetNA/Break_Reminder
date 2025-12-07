@@ -2,13 +2,16 @@
 import sys
 import gi
 gi.require_version('Gtk', '4.0')
-from gi.repository import Gtk, GLib, Gdk
+from gi.repository import Gtk, GLib, Gdk, Gio
 
 class BreakWindow(Gtk.ApplicationWindow):
     def __init__(self, app):
         super().__init__(application=app, title="Break Time")
         self.app = app
-        self.countdown = 20
+        
+        # Settings'ten değerleri çek
+        settings = Gio.Settings.new('org.gnome.shell.extensions.break-reminder')
+        self.countdown = settings.get_int('countdown-duration')
 
         self.fullscreen()
 
