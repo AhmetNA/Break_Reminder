@@ -6,9 +6,8 @@ export default class BreakReminderExtension extends Extension {
     constructor(metadata) {
         super(metadata);
         this._timeoutId = null;
-        this._settings = null;
-        this._settingsChangedId = null;
-        this._scriptPath = null;
+        this._playingPlayers = [];
+        this._breakActive = false;
     }
 
     enable() {
@@ -38,6 +37,8 @@ export default class BreakReminderExtension extends Extension {
 
         // Cleanup settings reference
         this._settings = null;
+        this._playingPlayers = [];
+        this._breakActive = false;
     }
 
     _startTimer() {
@@ -56,6 +57,8 @@ export default class BreakReminderExtension extends Extension {
 
     _showBreakScreen() {
         try {
+            this._breakActive = true;
+
             // Pause media before showing break screen
             this._pauseMedia();
 
@@ -67,27 +70,87 @@ export default class BreakReminderExtension extends Extension {
 
             // When the break screen closes, restart the timer
             proc.wait_async(null, () => {
+                this._breakActive = false;
+                this._resumeMedia();
                 this._startTimer();
             });
         } catch (e) {
             logError(e, 'Failed to launch break screen');
             // Restart timer even on error
+            this._breakActive = false;
             this._startTimer();
         }
     }
 
     _pauseMedia() {
         try {
-            // Use playerctl to pause all media players
+            // Reset playing players list
+            this._playingPlayers = [];
+
+            // 1. Get status of all players
+            // Format: playerName:status
             let proc = Gio.Subprocess.new(
-                ['playerctl', '-a', 'pause'],
-                Gio.SubprocessFlags.NONE
+                ['playerctl', '-a', 'metadata', '--format', '{{playerName}}:{{status}}'],
+                Gio.SubprocessFlags.STDOUT_PIPE
             );
 
-            // We don't need to wait for this to finish
+            proc.communicate_utf8_async(null, null, (proc, res) => {
+                try {
+                    // Check if break is still active
+                    if (!this._breakActive) return;
+
+                    let [, stdout, stderr] = proc.communicate_utf8_finish(res);
+                    if (stdout) {
+                        let lines = stdout.trim().split('\n');
+                        for (let line of lines) {
+                            let parts = line.split(':');
+                            if (parts.length >= 2) {
+                                let name = parts[0];
+                                let status = parts[1];
+                                if (status === 'Playing') {
+                                    this._playingPlayers.push(name);
+                                }
+                            }
+                        }
+                    }
+                } catch (e) {
+                    logError(e, 'Failed to get player metadata');
+                }
+
+                // 2. Pause all players after checking status
+                try {
+                    if (this._breakActive) {
+                        Gio.Subprocess.new(
+                            ['playerctl', '-a', 'pause'],
+                            Gio.SubprocessFlags.NONE
+                        );
+                    }
+                } catch (e) {
+                    logError(e, 'Failed to pause players');
+                }
+            });
+
         } catch (e) {
             // Log error but don't let it stop the break screen from showing
             logError(e, 'Failed to pause media');
+        }
+    }
+
+    _resumeMedia() {
+        try {
+            if (this._playingPlayers.length > 0) {
+                // Resume all previously playing players
+                for (let player of this._playingPlayers) {
+                    Gio.Subprocess.new(
+                        ['playerctl', '-p', player, 'play'],
+                        Gio.SubprocessFlags.NONE
+                    );
+                }
+                // Clear the list after resuming
+                this._playingPlayers = [];
+            }
+        } catch (e) {
+            logError(e, 'Failed to resume media');
         }
     }
 }
