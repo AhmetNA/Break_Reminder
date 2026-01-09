@@ -17,18 +17,8 @@ A GNOME Shell extension that reminds you to take breaks for your eyes and back e
 ## Requirements
 
 - GNOME Shell 45 or later
-- Python 3.x
-- GTK4 (python3-gi)
 
-Most Ubuntu/Fedora GNOME users already have these installed. If not:
-
-```bash
-# Ubuntu/Debian
-sudo apt install python3 python3-gi gir1.2-gtk-4.0
-
-# Fedora
-sudo dnf install python3 python3-gobject gtk4
-```
+No additional dependencies required! The extension uses native GNOME Shell APIs.
 
 ## Installation
 
@@ -44,13 +34,13 @@ cd Break_Reminder
 2. Copy the extension to your GNOME extensions directory:
 
 ```bash
-cp -r break-reminder@AhmetNA ~/.local/share/gnome-shell/extensions/
+cp -r break-reminder@ahmetna.github.io ~/.local/share/gnome-shell/extensions/
 ```
 
 3. Compile the settings schema:
 
 ```bash
-cd ~/.local/share/gnome-shell/extensions/break-reminder@AhmetNA
+cd ~/.local/share/gnome-shell/extensions/break-reminder@ahmetna.github.io
 glib-compile-schemas schemas/
 ```
 
@@ -62,15 +52,15 @@ glib-compile-schemas schemas/
 5. Enable the extension:
 
 ```bash
-gnome-extensions enable break-reminder@AhmetNA
+gnome-extensions enable break-reminder@ahmetna.github.io
 ```
 
 ## Configuration
 
 Open Settings → Extensions → Break Reminder to configure:
 
-- **Break Interval**: Minutes between break reminders (5-120 minutes)
-- **Break Duration**: Seconds to display break reminder (5-60 seconds)
+- **Break Interval**: Minutes between break reminders (default: 20 minutes)
+- **Break Duration**: Seconds to display break reminder (default: 20 seconds)
 
 ## Usage
 
@@ -87,12 +77,13 @@ journalctl -f -o cat /usr/bin/gnome-shell
 ## File Structure
 
 ```
-break-reminder@AhmetNA/
-├── extension.js          # Main extension logic (timer)
-├── break_screen.py       # Python GTK4 fullscreen UI
+break-reminder@ahmetna.github.io/
+├── extension.js          # Main extension logic (timer control)
+├── breakOverlay.js       # GNOME Shell overlay UI (break screen)
 ├── metadata.json         # Extension metadata
 ├── prefs.js             # Settings UI
 ├── stylesheet.css       # Styling
+├── break_screen.py       # (Deprecated - not used)
 └── schemas/             # Settings schema
     └── org.gnome.shell.extensions.break-reminder.gschema.xml
 ```
@@ -113,6 +104,6 @@ journalctl -f -o cat /usr/bin/gnome-shell
 ### Settings schema not found
 
 ```bash
-cd ~/.local/share/gnome-shell/extensions/break-reminder@AhmetNA
+cd ~/.local/share/gnome-shell/extensions/break-reminder@ahmetna.github.io
 glib-compile-schemas schemas/
 ```
