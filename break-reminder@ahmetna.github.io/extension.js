@@ -1,6 +1,7 @@
 import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
+import { BreakOverlay } from './breakOverlay.js';
 
 export default class BreakReminderExtension extends Extension {
     constructor(metadata) {
@@ -8,10 +9,10 @@ export default class BreakReminderExtension extends Extension {
         this._timeoutId = null;
         this._playingPlayers = [];
         this._breakActive = false;
+        this._overlay = null;
     }
 
     enable() {
-        this._scriptPath = this.path + '/break_screen.py';
         this._settings = this.getSettings();
 
         // Settings değişikliğini dinle
@@ -33,6 +34,12 @@ export default class BreakReminderExtension extends Extension {
         if (this._settingsChangedId) {
             this._settings.disconnect(this._settingsChangedId);
             this._settingsChangedId = null;
+        }
+
+        // Cleanup overlay if active
+        if (this._overlay) {
+            this._overlay.destroy();
+            this._overlay = null;
         }
 
         // Cleanup settings reference
@@ -62,22 +69,23 @@ export default class BreakReminderExtension extends Extension {
             // Pause media before showing break screen
             this._pauseMedia();
 
-            // Launch Python GTK application
-            let proc = Gio.Subprocess.new(
-                ['python3', this._scriptPath],
-                Gio.SubprocessFlags.NONE
-            );
+            // Create and show native GNOME Shell overlay
+            this._overlay = new BreakOverlay(this._settings);
 
             // When the break screen closes, restart the timer
-            proc.wait_async(null, () => {
+            this._overlay.connect('closed', () => {
                 this._breakActive = false;
+                this._overlay = null;
                 this._resumeMedia();
                 this._startTimer();
             });
+
+            this._overlay.show();
         } catch (e) {
-            logError(e, 'Failed to launch break screen');
+            logError(e, 'Failed to show break screen');
             // Restart timer even on error
             this._breakActive = false;
+            this._overlay = null;
             this._startTimer();
         }
     }
