@@ -48,13 +48,13 @@ export default class BreakReminderExtension extends Extension {
         this._breakActive = false;
     }
 
-    _startTimer() {
+    _startTimer(duration = null) {
         if (this._timeoutId) {
             GLib.Source.remove(this._timeoutId);
         }
 
-        // Settings dosyasından oku
-        const breakDuration = this._settings.get_int('break-duration');
+        // Use provided duration or read from settings
+        const breakDuration = duration || this._settings.get_int('break-duration');
 
         this._timeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, breakDuration, () => {
             this._showBreakScreen();
@@ -78,6 +78,13 @@ export default class BreakReminderExtension extends Extension {
                 this._overlay = null;
                 this._resumeMedia();
                 this._startTimer();
+            });
+
+            this._overlay.connect('snooze', () => {
+                this._breakActive = false;
+                this._overlay = null;
+                this._resumeMedia();
+                this._startTimer(3600); // 1 hour snooze
             });
 
             this._overlay.show();

@@ -7,6 +7,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 export const BreakOverlay = GObject.registerClass({
     Signals: {
         'closed': {},
+        'snooze': {},
     },
 }, class BreakOverlay extends St.Widget {
     _init(settings) {
@@ -62,10 +63,12 @@ export const BreakOverlay = GObject.registerClass({
         let bottomSpacer = new St.Widget({ y_expand: true });
         this._container.add_child(bottomSpacer);
 
-        // Kapatma butonu - en altta
+        // Buttons box - en altta
         let closeBox = new St.BoxLayout({
             x_align: Clutter.ActorAlign.CENTER,
             style_class: 'break-overlay-close-box',
+            vertical: true,
+            spacing: 20
         });
         this._container.add_child(closeBox);
 
@@ -78,6 +81,16 @@ export const BreakOverlay = GObject.registerClass({
         });
         this._closeButton.connect('clicked', () => this._onClose());
         closeBox.add_child(this._closeButton);
+
+        this._snoozeButton = new St.Button({
+            style_class: 'break-overlay-close-button',
+            label: 'Stop for 1 hour',
+            reactive: true,
+            can_focus: true,
+            track_hover: true,
+        });
+        this._snoozeButton.connect('clicked', () => this._onSnooze());
+        closeBox.add_child(this._snoozeButton);
 
         // Klavye eventi için
         this.connect('key-press-event', (actor, event) => {
@@ -169,6 +182,11 @@ export const BreakOverlay = GObject.registerClass({
 
     _onClose() {
         this.emit('closed');
+        this.hide();
+    }
+
+    _onSnooze() {
+        this.emit('snooze');
         this.hide();
     }
 
