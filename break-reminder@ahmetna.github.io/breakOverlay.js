@@ -122,8 +122,7 @@ export const BreakOverlay = GObject.registerClass({
 
         // Fade-in animasyonu
         this.opacity = 0;
-        this.ease({
-            opacity: 255,
+        this.ease_property('opacity', 255, {
             duration: 300,
             mode: Clutter.AnimationMode.EASE_OUT_QUAD,
         });
@@ -143,8 +142,7 @@ export const BreakOverlay = GObject.registerClass({
         }
 
         // Fade-out animasyonu
-        this.ease({
-            opacity: 0,
+        this.ease_property('opacity', 0, {
             duration: 200,
             mode: Clutter.AnimationMode.EASE_OUT_QUAD,
             onComplete: () => {
