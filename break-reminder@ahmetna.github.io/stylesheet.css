@@ -8,7 +8,6 @@
 }
 
 .break-dialog-content {
-    spacing: 30px;
     padding: 20px;
 }
 
@@ -42,14 +41,17 @@
 }
 
 /* New fullscreen overlay styles */
-.break-overlay-container {
+.break-overlay {
     background-color: rgba(51, 51, 51, 0.98);
-    padding: 0px;
 }
 
-.break-overlay-content {
-    spacing: 30px;
+.break-overlay-container {
+    background-color: transparent;
+    padding: 0px;
+    width: 100%;
+    height: 100%;
 }
+
 
 .break-overlay-message {
     color: #ffffff;
