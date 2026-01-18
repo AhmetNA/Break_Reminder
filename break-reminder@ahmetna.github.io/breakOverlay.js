@@ -113,7 +113,7 @@ export const BreakOverlay = GObject.registerClass({
 
     show() {
         // Add to screen
-        Main.layoutManager.addChrome(this, {
+        Main.layoutManager.addTopChrome(this, {
             affectsStruts: false,
             trackFullscreen: true,
         });
