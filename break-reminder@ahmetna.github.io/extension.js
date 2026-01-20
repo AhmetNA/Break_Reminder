@@ -1,6 +1,7 @@
 import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { BreakOverlay } from './breakOverlay.js';
 
 export default class BreakReminderExtension extends Extension {
@@ -10,6 +11,7 @@ export default class BreakReminderExtension extends Extension {
         this._playingPlayers = [];
         this._breakActive = false;
         this._overlay = null;
+        this._screenLockId = null;
     }
 
     enable() {
@@ -18,6 +20,11 @@ export default class BreakReminderExtension extends Extension {
         // Settings değişikliğini dinle
         this._settingsChangedId = this._settings.connect('changed::break-duration', () => {
             this._startTimer();
+        });
+
+        // Watch for screen lock
+        this._screenLockId = Main.screenShield.connect('locked-changed', (shield) => {
+            this._onScreenLockChanged(shield);
         });
 
         this._startTimer();
@@ -36,6 +43,12 @@ export default class BreakReminderExtension extends Extension {
             this._settingsChangedId = null;
         }
 
+        // Disconnect screen lock signal
+        if (this._screenLockId) {
+            Main.screenShield.disconnect(this._screenLockId);
+            this._screenLockId = null;
+        }
+
         // Cleanup overlay if active
         if (this._overlay) {
             this._overlay.destroy();
@@ -46,6 +59,19 @@ export default class BreakReminderExtension extends Extension {
         this._settings = null;
         this._playingPlayers = [];
         this._breakActive = false;
+    }
+
+    _onScreenLockChanged(shield) {
+        if (shield.locked) {
+            // Screen locked: stop timer
+            if (this._timeoutId) {
+                GLib.Source.remove(this._timeoutId);
+                this._timeoutId = null;
+            }
+        } else {
+            // Screen unlocked: restart timer
+            this._startTimer();
+        }
     }
 
     _startTimer(duration = null) {
