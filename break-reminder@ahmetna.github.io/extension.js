@@ -12,6 +12,8 @@ export default class BreakReminderExtension extends Extension {
         this._breakActive = false;
         this._overlay = null;
         this._screenLockId = null;
+        this._fullscreenChangedId = null;
+        this._pendingBreak = false; // Break waiting for fullscreen to end
     }
 
     enable() {
@@ -25,6 +27,11 @@ export default class BreakReminderExtension extends Extension {
         // Watch for screen lock
         this._screenLockId = Main.screenShield.connect('locked-changed', (shield) => {
             this._onScreenLockChanged(shield);
+        });
+
+        // Watch for fullscreen changes
+        this._fullscreenChangedId = global.display.connect('in-fullscreen-changed', () => {
+            this._onFullscreenChanged();
         });
 
         this._startTimer();
@@ -49,6 +56,12 @@ export default class BreakReminderExtension extends Extension {
             this._screenLockId = null;
         }
 
+        // Disconnect fullscreen signal
+        if (this._fullscreenChangedId) {
+            global.display.disconnect(this._fullscreenChangedId);
+            this._fullscreenChangedId = null;
+        }
+
         // Cleanup overlay if active
         if (this._overlay) {
             this._overlay.destroy();
@@ -59,6 +72,7 @@ export default class BreakReminderExtension extends Extension {
         this._settings = null;
         this._playingPlayers = [];
         this._breakActive = false;
+        this._pendingBreak = false;
     }
 
     _onScreenLockChanged(shield) {
@@ -71,6 +85,25 @@ export default class BreakReminderExtension extends Extension {
         } else {
             // Screen unlocked: restart timer
             this._startTimer();
+        }
+    }
+
+    _isInFullscreen() {
+        // Check if any monitor has a fullscreen window
+        let numMonitors = global.display.get_n_monitors();
+        for (let i = 0; i < numMonitors; i++) {
+            if (global.display.get_monitor_in_fullscreen(i)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    _onFullscreenChanged() {
+        // If we have a pending break and fullscreen ended, show the break
+        if (this._pendingBreak && !this._isInFullscreen()) {
+            this._pendingBreak = false;
+            this._showBreakScreen();
         }
     }
 
@@ -90,6 +123,12 @@ export default class BreakReminderExtension extends Extension {
 
     _showBreakScreen() {
         try {
+            // If in fullscreen, defer the break until fullscreen ends
+            if (this._isInFullscreen()) {
+                this._pendingBreak = true;
+                return;
+            }
+
             this._breakActive = true;
 
             // Pause media before showing break screen
