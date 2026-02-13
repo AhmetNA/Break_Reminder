@@ -173,6 +173,11 @@ export const BreakOverlay = GObject.registerClass({
     }
 
     _startCountdown() {
+        if (this._countdownId) {
+            GLib.Source.remove(this._countdownId);
+            this._countdownId = null;
+        }
+
         this._countdownId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 1, () => {
             this._countdown--;
             this._countdownLabel.set_text(`${this._countdown}`);

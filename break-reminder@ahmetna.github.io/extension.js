@@ -162,73 +162,95 @@ export default class BreakReminderExtension extends Extension {
         }
     }
 
-    _pauseMedia() {
+    _getMprisPlayers() {
         try {
-            // Reset playing players list
-            this._playingPlayers = [];
-
-            // 1. Get status of all players
-            // Format: playerName:status
-            let proc = Gio.Subprocess.new(
-                ['playerctl', '-a', 'metadata', '--format', '{{playerName}}:{{status}}'],
-                Gio.SubprocessFlags.STDOUT_PIPE
+            let bus = Gio.DBus.session;
+            let result = bus.call_sync(
+                'org.freedesktop.DBus',
+                '/org/freedesktop/DBus',
+                'org.freedesktop.DBus',
+                'ListNames',
+                null,
+                new GLib.VariantType('(as)'),
+                Gio.DBusCallFlags.NONE,
+                -1,
+                null
             );
 
-            proc.communicate_utf8_async(null, null, (proc, res) => {
-                try {
-                    // Check if break is still active
-                    if (!this._breakActive) return;
-
-                    let [, stdout, stderr] = proc.communicate_utf8_finish(res);
-                    if (stdout) {
-                        let lines = stdout.trim().split('\n');
-                        for (let line of lines) {
-                            let parts = line.split(':');
-                            if (parts.length >= 2) {
-                                let name = parts[0];
-                                let status = parts[1];
-                                if (status === 'Playing') {
-                                    this._playingPlayers.push(name);
-                                }
-                            }
-                        }
-                    }
-                } catch (e) {
-                    logError(e, 'Failed to get player metadata');
-                }
-
-                // 2. Pause all players after checking status
-                try {
-                    if (this._breakActive) {
-                        Gio.Subprocess.new(
-                            ['playerctl', '-a', 'pause'],
-                            Gio.SubprocessFlags.NONE
-                        );
-                    }
-                } catch (e) {
-                    logError(e, 'Failed to pause players');
-                }
-            });
-
+            let [names] = result.deep_unpack();
+            return names.filter(name => name.startsWith('org.mpris.MediaPlayer2.'));
         } catch (e) {
-            // Log error but don't let it stop the break screen from showing
+            logError(e, 'Failed to get MPRIS players');
+            return [];
+        }
+    }
+
+    _getPlayerStatus(busName) {
+        try {
+            let bus = Gio.DBus.session;
+            let result = bus.call_sync(
+                busName,
+                '/org/mpris/MediaPlayer2',
+                'org.freedesktop.DBus.Properties',
+                'Get',
+                new GLib.Variant('(ss)', ['org.mpris.MediaPlayer2.Player', 'PlaybackStatus']),
+                new GLib.VariantType('(v)'),
+                Gio.DBusCallFlags.NONE,
+                -1,
+                null
+            );
+
+            let [variant] = result.deep_unpack();
+            return variant.deep_unpack();
+        } catch (e) {
+            return null;
+        }
+    }
+
+    _callPlayerMethod(busName, method) {
+        try {
+            let bus = Gio.DBus.session;
+            bus.call_sync(
+                busName,
+                '/org/mpris/MediaPlayer2',
+                'org.mpris.MediaPlayer2.Player',
+                method,
+                null,
+                null,
+                Gio.DBusCallFlags.NONE,
+                -1,
+                null
+            );
+        } catch (e) {
+            logError(e, `Failed to call ${method} on ${busName}`);
+        }
+    }
+
+    _pauseMedia() {
+        try {
+            this._playingPlayers = [];
+
+            let players = this._getMprisPlayers();
+            for (let player of players) {
+                let status = this._getPlayerStatus(player);
+                if (status === 'Playing') {
+                    this._playingPlayers.push(player);
+                    if (this._breakActive) {
+                        this._callPlayerMethod(player, 'Pause');
+                    }
+                }
+            }
+        } catch (e) {
             logError(e, 'Failed to pause media');
         }
     }
 
     _resumeMedia() {
         try {
-            if (this._playingPlayers.length > 0) {
-                // Resume all previously playing players
-                for (let player of this._playingPlayers) {
-                    Gio.Subprocess.new(
-                        ['playerctl', '-p', player, 'play'],
-                        Gio.SubprocessFlags.NONE
-                    );
-                }
-                // Clear the list after resuming
-                this._playingPlayers = [];
+            for (let player of this._playingPlayers) {
+                this._callPlayerMethod(player, 'Play');
             }
+            this._playingPlayers = [];
         } catch (e) {
             logError(e, 'Failed to resume media');
         }
